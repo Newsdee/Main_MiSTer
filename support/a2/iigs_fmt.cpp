@@ -1008,32 +1008,38 @@ int a2_woz35_to_po(uint8_t *po, const uint8_t *woz, size_t woz_size)
 // ===========================================================================
 // classification
 // ===========================================================================
-DiskClass iigs_classify(const uint8_t *buf, size_t size, const char *ext)
+DiskClass iigs_classify(const uint8_t *buf, size_t buf_len, size_t image_size,
+                        const char *ext)
 {
 	// content probes first
-	int wt = woz_disk_type(buf, size);
+	int wt = woz_disk_type(buf, buf_len);
 	if (wt == 1) return DC_FLOPPY_525;
 	if (wt == 2) return DC_FLOPPY_35;
 
 	TwoMG m;
-	if (twomg_parse(buf, size, &m)) {
+	if (buf_len >= 64 && twomg_parse(buf, image_size, &m)) {
 		if (m.format == 2) return DC_FLOPPY_525;          // NIB payload
 		if (m.data_len == A2_525_IMAGE_SIZE) return DC_FLOPPY_525;
 		if (m.data_len == A2_35_IMAGE_SIZE)  return DC_FLOPPY_35;
 		return DC_HDD;
 	}
 
-	if (dc42_probe(buf, size)) {
+	if (buf_len >= 84 && dc42_probe(buf, image_size)) {
 		uint32_t ds = rd_be32(buf + 0x40);
 		if (ds == A2_35_IMAGE_SIZE || ds == 409600) return DC_FLOPPY_35;
 		return DC_HDD;
 	}
 
 	// bare images by size/extension
-	if (ext_is_ascii(ext, "nib") || size == A2_NIB_IMAGE_SIZE) return DC_FLOPPY_525;
-	if (a2_resolve_525_order(buf, size, ext) != A2_ORDER_UNKNOWN) return DC_FLOPPY_525;
-	if (size == A2_35_IMAGE_SIZE)  return DC_FLOPPY_35;   // §4 edge: 800K assumed floppy
+	if (ext_is_ascii(ext, "nib") || image_size == A2_NIB_IMAGE_SIZE) return DC_FLOPPY_525;
+	if (buf_len >= image_size &&
+	    a2_resolve_525_order(buf, image_size, ext) != A2_ORDER_UNKNOWN)
+		return DC_FLOPPY_525;
+	if (image_size == A2_525_IMAGE_SIZE &&
+	    (ext_is_ascii(ext, "po") || ext_is_ascii(ext, "do") || ext_is_ascii(ext, "dsk")))
+		return DC_FLOPPY_525;
+	if (image_size == A2_35_IMAGE_SIZE)  return DC_FLOPPY_35;   // §4 edge: 800K assumed floppy
 	if (ext_is_ascii(ext, "hdv") || ext_is_ascii(ext, "po")) return DC_HDD;
-	if (size > 0 && (size % A2_BLOCK_SIZE) == 0) return DC_HDD;
+	if (image_size > 0 && (image_size % A2_BLOCK_SIZE) == 0) return DC_HDD;
 	return DC_UNKNOWN;
 }

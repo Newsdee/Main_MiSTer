@@ -184,7 +184,7 @@ int iigs_mount(int index, const char *name, fileTYPE *f, int *out_writable)
 
 	const char *dot = strrchr(name, '.');
 	const char *ext = dot ? dot + 1 : NULL;
-	int wt     = woz_disk_type(head, f->size);
+	int wt     = woz_disk_type(head, hn);
 	int is_nib = (f->size == A2_NIB_IMAGE_SIZE);
 	TwoMG m;
 	int is_2mg = twomg_parse(head, f->size, &m);
@@ -245,7 +245,7 @@ int iigs_mount(int index, const char *name, fileTYPE *f, int *out_writable)
 	}
 
 	// Need to convert. Validate geometry up front for a clear message.
-	DiskClass cls = iigs_classify(head, f->size, ext);
+	DiskClass cls = iigs_classify(head, hn, f->size, ext);
 	int want_cls = (kind == 1) ? DC_FLOPPY_35 : DC_FLOPPY_525;
 	if (cls != want_cls) {
 		reject(kind == 1 ? "3.5\" drive needs an 800K disk image."

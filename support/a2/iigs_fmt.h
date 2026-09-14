@@ -38,10 +38,9 @@ typedef enum {
 	DC_FLOPPY_35,    // 800K logical / 3.5" WOZ
 } DiskClass;
 
-// Classify a disk image from its leading bytes + size (+ optional extension,
-// lowercase, no dot, may be NULL). Probes content first (WOZ/2MG/DC42 magic),
-// falls back to size/extension for bare images. See IIGS_DISK_SUPPORT.md §4.
-DiskClass iigs_classify(const uint8_t *buf, size_t size, const char *ext);
+// Classify a disk image from its leading bytes + size (+ optional extension)
+DiskClass iigs_classify(const uint8_t *buf, size_t buf_len, size_t image_size,
+						const char *ext);
 
 // ---- 2MG / 2IMG ----
 typedef struct {
