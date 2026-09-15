@@ -109,6 +109,12 @@ void a2_dos_track_to_prodos(uint8_t *dst, const uint8_t *src);
 void a2_dsk_to_nib(uint8_t *nib, const uint8_t *dsk);
 int  a2_nib_to_dsk(uint8_t *dsk, const uint8_t *nib);   // 1 if all tracks parsed
 
+// ---- 5.25" per-track nibble encode/decode (NIB write-back) ----
+// Re-encode one DOS-order 4096-byte track (dsk + t*4096) into a canonical
+// 6656-byte NIB track; unchanged tracks are byte-stable.
+void a2_dsk_track_to_nib(uint8_t *nibtrack, const uint8_t *dsktrack, int track);
+int  a2_nib_track_to_dsk(const uint8_t *nibtrack, uint8_t *dsktrack);
+
 // ---- 5.25" "easy WOZ" (DOS-order DSK <-> WOZ2) ----
 // Builds a fully-allocated standard-layout WOZ2 (all 35 tracks present) so the
 // core can read and write it; trivially reversible. Returns bytes written / 0.
